@@ -11,7 +11,7 @@ except ImportError:
 
 class SystemMonitor:
     @staticmethod
-    def get_cpu_percent(interval: float = 1.0) -> float:
+    def get_cpu_percent(interval: float | None = None) -> float:
         try:
             if PSUTIL_AVAILABLE:
                 return round(psutil.cpu_percent(interval=interval), 1)

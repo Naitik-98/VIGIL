@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from gui import MainApp
+from gui import App
+from manager import ProtectionManager
 
 
 def main() -> None:
     """Launch the VIGIL application."""
-    app = MainApp()
+    manager = ProtectionManager()
+    app = App(manager)
     app.mainloop()
 
 

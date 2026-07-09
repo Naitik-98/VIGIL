@@ -11,6 +11,7 @@ from manager import ProtectionManager
 from domain import MaintenanceTask
 from dashboard import SystemMonitor
 from analytics import StatsEngine
+import theme
 from theme import DARK_PALETTE, FONT_SCHEME, PADDING_LARGE, PADDING_MEDIUM, PADDING_SMALL
 from validator import COMPONENTS, MAINTENANCE_TYPES
 
@@ -91,24 +92,7 @@ class Sidebar(tk.Frame):
         divider = tk.Frame(self, bg=DARK_PALETTE.border, height=1)
         divider.pack(fill=tk.X, padx=PADDING_MEDIUM)
 
-        # Theme toggle button
-        self.theme_btn = tk.Button(
-            self,
-            text="Toggle Theme",
-            command=self.toggle_theme,
-            bd=0,
-            relief=tk.FLAT,
-            fg=DARK_PALETTE.text_secondary,
-            bg=DARK_PALETTE.sidebar,
-            activebackground=DARK_PALETTE.card,
-            activeforeground=DARK_PALETTE.text,
-            font=FONT_SCHEME.get_body(),
-            cursor="hand2",
-            anchor=tk.W,
-            padx=PADDING_LARGE,
-            pady=PADDING_MEDIUM,
-        )
-        self.theme_btn.pack(side=tk.BOTTOM, fill=tk.X, pady=(0, PADDING_LARGE))
+        # Theme toggle button moved to App
 
         self.nav_items = [
             ("Dashboard", "dashboard"),
@@ -123,39 +107,26 @@ class Sidebar(tk.Frame):
             btn = self._create_nav_button(label, key)
             btn.pack(fill=tk.X, padx=PADDING_MEDIUM, pady=PADDING_SMALL)
 
-    def toggle_theme(self) -> None:
-        """Toggle between dark and light themes."""
-        self.is_dark_mode = not self.is_dark_mode
-        if self.is_dark_mode:
-            self.palette = theme.DARK_PALETTE
-            self.sidebar.theme_btn.config(text="🌙 Dark Mode")
-        else:
-            self.palette = theme.LIGHT_PALETTE
-            self.sidebar.theme_btn.config(text="☀️ Light Mode")
-            
-        # For a full dynamic app, we usually need to re-render or recursively configure.
-        # Given limitations of simple tkinter without a proper variable watcher across files,
-        # we update the root background and require restart or redraw of subframes. 
-        # A simple hack is updating the button text for now to show interaction.
-        # We can implement a recursive update:
-        self.config(bg=self.palette.background)
-        self._recursive_style(self)
-        
-    def _recursive_style(self, w: tk.Widget) -> None:
-        try:
-            name = w.winfo_name()
-            wtype = w.winfo_class()
-            if wtype in ("Tk", "Frame", "Toplevel", "LabelFrame"):
-                # We need to distinguish sidebar vs background vs card. 
-                # This is a bit complex in raw tk. 
-                pass
-            elif wtype in ("Label", "Button", "Checkbutton", "Radiobutton"):
-                pass
-        except tk.TclError:
-            pass
-            
-        for child in w.winfo_children():
-            self._recursive_style(child)
+    def _create_nav_button(self, label: str, key: str) -> tk.Button:
+        btn = tk.Button(
+            self,
+            text=label,
+            command=lambda k=key: self.on_nav(k),
+            bd=0,
+            relief=tk.FLAT,
+            fg=DARK_PALETTE.text_secondary,
+            bg=DARK_PALETTE.sidebar,
+            activebackground=DARK_PALETTE.card,
+            activeforeground=DARK_PALETTE.text,
+            font=FONT_SCHEME.get_normal(),
+            cursor="hand2",
+            anchor=tk.W,
+            padx=PADDING_LARGE,
+            pady=PADDING_MEDIUM,
+        )
+        return btn
+
+
             
     def run(self) -> None:
         """Run the application."""
@@ -172,17 +143,22 @@ class DashboardView(tk.Frame):
         self.manager = manager
         self.monitor = SystemMonitor()
 
+        header_frame = tk.Frame(self, bg=DARK_PALETTE.background)
+        header_frame.pack(fill=tk.X, padx=PADDING_LARGE, pady=PADDING_LARGE)
+
         header = tk.Label(
-            self,
+            header_frame,
             text="Dashboard",
             fg=DARK_PALETTE.text,
             bg=DARK_PALETTE.background,
             font=FONT_SCHEME.get_title(),
         )
-        header.pack(padx=PADDING_LARGE, pady=PADDING_LARGE, anchor=tk.W)
+        header.pack(side=tk.LEFT)
 
         self._build_system_metrics()
         self._build_maintenance_summary()
+
+
 
     def _build_system_metrics(self) -> None:
         metrics_frame = tk.Frame(self, bg=DARK_PALETTE.background)
@@ -254,7 +230,7 @@ class DashboardView(tk.Frame):
         # Start updating metrics periodically
         self._update_metrics()
 
-    def _update_metrics(self) -> None:
+    def _force_refresh(self) -> None:
         if not self.winfo_exists():
             return
             
@@ -266,8 +242,11 @@ class DashboardView(tk.Frame):
         self.time_card.set_value(self.monitor.get_current_time())
         self.date_card.set_value(self.monitor.get_current_date())
         self.uptime_card.set_value(self.monitor.get_uptime_string())
-        
-        self.after(1000, self._update_metrics)
+
+    def _update_metrics(self) -> None:
+        self._force_refresh()
+        if self.winfo_exists():
+            self.after(1000, self._update_metrics)
 
     def _build_maintenance_summary(self) -> None:
         summary_frame = tk.Frame(self, bg=DARK_PALETTE.card, relief=tk.FLAT)
@@ -578,7 +557,7 @@ class RemindersView(tk.Frame):
             bg=DARK_PALETTE.background,
             font=FONT_SCHEME.get_title(),
         )
-        header.pack(padx=PADING_LARGE, pady=PADDING_LARGE, anchor=tk.W)
+        header.pack(padx=PADDING_LARGE, pady=PADDING_LARGE, anchor=tk.W)
 
         filter_frame = tk.Frame(self, bg=DARK_PALETTE.background)
         filter_frame.pack(fill=tk.X, padx=PADDING_LARGE, pady=PADDING_MEDIUM)
@@ -665,7 +644,7 @@ class SettingsView(tk.Frame):
         header.pack(padx=PADDING_LARGE, pady=PADDING_LARGE, anchor=tk.W)
 
         settings_frame = tk.Frame(self, bg=DARK_PALETTE.card, relief=tk.FLAT)
-        settings_frame.pack(fill=tk.X, padx=PADDING_LARGE, pady=PADING_MEDIUM)
+        settings_frame.pack(fill=tk.X, padx=PADDING_LARGE, pady=PADDING_MEDIUM)
 
         tk.Label(
             settings_frame,
@@ -795,7 +774,6 @@ class App(tk.Tk):
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         self.sidebar = Sidebar(main_frame, self._on_navigate)
-        self.sidebar.toggle_theme = self.toggle_theme
         self.sidebar.pack(side=tk.LEFT, fill=tk.Y)
 
         self.content_frame = tk.Frame(main_frame, bg=DARK_PALETTE.background)
@@ -811,6 +789,21 @@ class App(tk.Tk):
         }
 
         self._show_view("dashboard")
+
+        self.theme_btn = tk.Button(
+            self,
+            text="☀️",
+            command=self.toggle_theme,
+            bd=0,
+            relief=tk.FLAT,
+            fg=theme.DARK_PALETTE.text_secondary,
+            bg=theme.DARK_PALETTE.background,
+            activebackground=theme.DARK_PALETTE.card,
+            activeforeground=theme.DARK_PALETTE.text,
+            font=("Segoe UI", 16, "bold"),
+            cursor="hand2",
+        )
+        self.theme_btn.place(relx=1.0, rely=0.0, anchor="ne", x=-20, y=20)
 
     def _on_navigate(self, view_key: str) -> None:
         self._show_view(view_key)
@@ -831,24 +824,80 @@ class App(tk.Tk):
             self.current_view = self.views[view_id]
             self.current_view.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=PADDING_LARGE, pady=PADDING_LARGE)
             
-    def _apply_theme(self, widget: tk.Widget) -> None:
-        """Recursively apply theme to the widget and its children based on self.palette."""
-        bg = None
-        fg = None
+    def toggle_theme(self) -> None:
+        if getattr(self, '_animating', False):
+            return
+        self._animating = True
         
-        widget_type = widget.winfo_class()
+        self.is_dark_mode = not self.is_dark_mode
+        old_palette = self.palette
+        if self.is_dark_mode:
+            self.palette = theme.DARK_PALETTE
+            self.theme_btn.config(text="☀️", bg=theme.DARK_PALETTE.background)
+        else:
+            self.palette = theme.LIGHT_PALETTE
+            self.theme_btn.config(text="🌙", bg=theme.LIGHT_PALETTE.background)
+            
+        w, h = self.winfo_width(), self.winfo_height()
+        btn_x = self.theme_btn.winfo_x() + self.theme_btn.winfo_width() // 2
+        btn_y = self.theme_btn.winfo_y() + self.theme_btn.winfo_height() // 2
         
-        if widget_type in ('Frame', 'Tk', 'Toplevel'):
-            # Some specific backgrounds based on hierarchy/name can be tedious, 
-            # we'll approximate. The sidebar and cards have specific bg, but a general
-            # recolor uses self.palette.
-            if hasattr(widget, 'master') and widget.master == self:
-                # Top level frames
-                pass
-                
-        # To avoid breaking existing custom coloring, a more robust way to switch in tkinter
-        # is to restart or use a style map. However, for a simple manual apply:
-        pass
+        canvas = tk.Canvas(self, width=w, height=h, highlightthickness=0, bg=old_palette.background)
+        canvas.place(x=0, y=0)
+        
+        import math
+        max_r = math.hypot(max(btn_x, w - btn_x), max(btn_y, h - btn_y))
+        
+        circle_id = canvas.create_oval(
+            btn_x, btn_y, btn_x, btn_y,
+            fill=self.palette.background,
+            outline=""
+        )
+        
+        steps = 20
+        delay = 15
+        
+        def animate(step: int) -> None:
+            if step > steps:
+                self.config(bg=self.palette.background)
+                self._apply_theme_recursive(self, old_palette, self.palette)
+                canvas.destroy()
+                self._animating = False
+                self.theme_btn.tkraise()
+                return
+            
+            progress = step / steps
+            r = max_r * (1 - (1 - progress)**3)
+            canvas.coords(circle_id, btn_x - r, btn_y - r, btn_x + r, btn_y + r)
+            self.after(delay, lambda: animate(step + 1))
+            
+        animate(1)
+
+    def _apply_theme_recursive(self, widget: tk.Widget, old_p: Any, new_p: Any) -> None:
+        try:
+            bg = widget.cget("bg")
+            if bg == old_p.background: widget.config(bg=new_p.background)
+            elif bg == old_p.card: widget.config(bg=new_p.card)
+            elif bg == old_p.sidebar: widget.config(bg=new_p.sidebar)
+            
+            fg = widget.cget("fg")
+            if fg == old_p.text: widget.config(fg=new_p.text)
+            elif fg == old_p.text_secondary: widget.config(fg=new_p.text_secondary)
+            elif fg == old_p.accent: widget.config(fg=new_p.accent)
+            
+            active_bg = widget.cget("activebackground")
+            if active_bg == old_p.card: widget.config(activebackground=new_p.card)
+            elif active_bg == old_p.sidebar: widget.config(activebackground=new_p.sidebar)
+            elif active_bg == old_p.background: widget.config(activebackground=new_p.background)
+            
+            active_fg = widget.cget("activeforeground")
+            if active_fg == old_p.text: widget.config(activeforeground=new_p.text)
+        except tk.TclError:
+            pass
+            
+        for child in widget.winfo_children():
+            if child != getattr(self, 'theme_btn', None):
+                self._apply_theme_recursive(child, old_p, new_p)
 
 
 def main() -> None:
