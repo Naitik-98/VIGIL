@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ VIGIL 1.0
+#  VIGIL 1.0
 ### *Your PC's Silent Guardian*
 
 **A modern desktop application for PC maintenance management, live system monitoring, and data-driven analytics.**
@@ -19,15 +19,15 @@
 
 VIGIL is a **local-first desktop application** built with Python and Tkinter that helps you maintain your PC through:
 
-- 🖥️ **Live system monitoring** — Real-time CPU, RAM, and Disk stats (like Task Manager)
-- 🔧 **Preventive maintenance tracking** — Schedule and manage all your PC maintenance tasks
-- 📊 **Data-driven analytics** — NumPy-powered cost and compliance statistics
-- 🔔 **Smart reminders** — Get alerted when tasks are due or overdue
-- 🌙 **Beautiful dark/light UI** — Smooth animated theme transitions
+-  **Live system monitoring** — Real-time CPU, RAM, and Disk stats (like Task Manager)
+-  **Preventive maintenance tracking** — Schedule and manage all your PC maintenance tasks
+-  **Data-driven analytics** — NumPy-powered cost and compliance statistics
+-  **Smart reminders** — Get alerted when tasks are due or overdue
+-  **Beautiful dark/light UI** — Smooth animated theme transitions
 
 ---
 
-## ✨ Features
+##  Features
 
 | Feature | Description |
 |---|---|
@@ -64,7 +64,7 @@ python main.py
 
 ---
 
-## 🏗️ Project Structure
+##  Project Structure
 
 ```
 VIGIL 1.0/
@@ -87,7 +87,7 @@ VIGIL 1.0/
 
 ---
 
-## 🏛️ Architecture
+##  Architecture
 
 VIGIL follows a clean **layered architecture**:
 
@@ -115,7 +115,7 @@ User Input → Validator → Manager → Persistence → Analytics → UI
 
 ---
 
-## 📋 Data Model
+##  Data Model
 
 Each maintenance task stores:
 
@@ -137,7 +137,7 @@ Each maintenance task stores:
 
 ---
 
-## 💾 Storage
+##  Storage
 
 All data is saved to `data/maintenance.json` locally:
 
@@ -182,7 +182,7 @@ All data is saved to `data/maintenance.json` locally:
 
 ---
 
-## 📌 Roadmap
+##  Roadmap
 
 See **[VIGIL_ROADMAP.md](VIGIL_ROADMAP.md)** for the full development checklist covering VIGIL 1.0 (MVP) through VIGIL 2.1 (Professional Edition) and the VIGIL 3.0 future vision.
 
