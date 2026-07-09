@@ -21,6 +21,17 @@ class ColorPalette:
 
 
 DARK_PALETTE = ColorPalette()
+LIGHT_PALETTE = ColorPalette(
+    background="#F5F5F5",
+    sidebar="#FFFFFF",
+    card="#FFFFFF",
+    accent="#00C896",
+    text="black",
+    text_secondary="#505050",
+    border="#E0E0E0",
+)
+
+ACTIVE_PALETTE = DARK_PALETTE
 
 
 @dataclass(slots=True, frozen=True)
