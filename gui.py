@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import date
 from typing import Any, Callable
+import math
 import os
 from PIL import Image, ImageTk
 
@@ -477,7 +478,6 @@ class AnalyticsView(tk.Frame):
             kwargs['bg'] = DARK_PALETTE.background
         super().__init__(parent, **kwargs)
         self.manager = manager
-        self.stats_engine = StatsEngine()
 
         header = tk.Label(
             self,
@@ -493,9 +493,9 @@ class AnalyticsView(tk.Frame):
         metrics_frame = tk.Frame(self, bg=DARK_PALETTE.background)
         metrics_frame.pack(fill=tk.X, padx=PADDING_LARGE, pady=PADDING_MEDIUM)
 
-        compliance = self.stats_engine.calculate_compliance_rate(tasks)
-        costs = self.stats_engine.cost_statistics(tasks)
-        intervals = self.stats_engine.maintenance_interval_stats(tasks)
+        compliance = StatsEngine.calculate_compliance_rate(tasks)
+        costs = StatsEngine.cost_statistics(tasks)
+        intervals = StatsEngine.maintenance_interval_stats(tasks)
 
         StatCard(
             metrics_frame,
@@ -815,15 +815,7 @@ class App(tk.Tk):
         if view_key in self.views:
             self.views[view_key].pack(fill=tk.BOTH, expand=True)
 
-    def show_view(self, view_id: str) -> None:
-        """Switch the main content area to the specified view."""
-        if self.current_view:
-            self.current_view.pack_forget()
 
-        if view_id in self.views:
-            self.current_view = self.views[view_id]
-            self.current_view.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=PADDING_LARGE, pady=PADDING_LARGE)
-            
     def toggle_theme(self) -> None:
         if getattr(self, '_animating', False):
             return
@@ -845,7 +837,6 @@ class App(tk.Tk):
         canvas = tk.Canvas(self, width=w, height=h, highlightthickness=0, bg=old_palette.background)
         canvas.place(x=0, y=0)
         
-        import math
         max_r = math.hypot(max(btn_x, w - btn_x), max(btn_y, h - btn_y))
         
         circle_id = canvas.create_oval(
@@ -900,10 +891,3 @@ class App(tk.Tk):
                 self._apply_theme_recursive(child, old_p, new_p)
 
 
-def main() -> None:
-    app = App()
-    app.mainloop()
-
-
-if __name__ == "__main__":
-    main()

@@ -49,6 +49,16 @@
       "cost": 25.0,
       "status": "Overdue",
       "notes": ""
+    },
+    {
+      "task_id": "TEST-3917d8",
+      "component": "CPU",
+      "maintenance_type": "Thermal Paste Replacement",
+      "last_service_date": "2026-06-10",
+      "next_service_date": "2027-06-10",
+      "cost": 50.0,
+      "status": "Healthy",
+      "notes": "Audit test task"
     }
   ],
   "history": [
@@ -101,6 +111,16 @@
       "status": "Overdue",
       "cost": 25.0,
       "timestamp": "2026-07-10 01:28:41"
+    },
+    {
+      "record_id": "0a953d29-e564-4c31-a1d0-b4f42ee0ed32",
+      "action": "created",
+      "task_id": "TEST-3917d8",
+      "component": "CPU",
+      "maintenance_type": "Thermal Paste Replacement",
+      "status": "Healthy",
+      "cost": 50.0,
+      "timestamp": "2026-07-10 03:26:35"
     }
   ],
   "settings": {
