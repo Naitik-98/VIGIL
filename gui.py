@@ -63,7 +63,8 @@ class Sidebar(tk.Frame):
         self.active_button: tk.Button | None = None
 
         # Load and resize logo
-        logo_path = os.path.join("media", "Your Silent Protector(logo VIGIL).png")
+        from utils import resource_path
+        logo_path = resource_path(os.path.join("media", "Your Silent Protector(logo VIGIL).png"))
         try:
             pil_image = Image.open(logo_path)
             # Resize image to fit sidebar appropriately (e.g., width 150)
@@ -275,6 +276,89 @@ class DashboardView(tk.Frame):
         stat_line.pack(anchor=tk.W, padx=PADDING_MEDIUM, pady=(PADDING_SMALL, PADDING_MEDIUM))
 
 
+class TaskFormDialog(tk.Toplevel):
+    def __init__(self, parent: tk.Widget, manager: ProtectionManager, task: MaintenanceTask | None = None, on_save: Callable[[], None] | None = None) -> None:
+        super().__init__(parent)
+        self.manager = manager
+        self.task = task
+        self.on_save = on_save
+        
+        self.title("Add Task" if not task else "Update Task")
+        self.geometry("400x550")
+        self.configure(bg=DARK_PALETTE.background)
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        main_frame = tk.Frame(self, bg=DARK_PALETTE.background, padx=PADDING_LARGE, pady=PADDING_LARGE)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        self.component_var = tk.StringVar(value=task.component if task else COMPONENTS[0])
+        self.type_var = tk.StringVar(value=task.maintenance_type if task else MAINTENANCE_TYPES[0])
+        self.last_date_var = tk.StringVar(value=str(task.last_service_date) if task else str(date.today()))
+        self.next_date_var = tk.StringVar(value=str(task.next_service_date) if task else "")
+        self.cost_var = tk.StringVar(value=str(task.cost) if task else "0.0")
+        
+        tk.Label(main_frame, text="Component:", bg=DARK_PALETTE.background, fg=DARK_PALETTE.text, font=FONT_SCHEME.get_normal()).pack(anchor=tk.W)
+        ttk.Combobox(main_frame, textvariable=self.component_var, values=COMPONENTS, state="readonly").pack(fill=tk.X, pady=(0, PADDING_MEDIUM))
+        
+        tk.Label(main_frame, text="Maintenance Type:", bg=DARK_PALETTE.background, fg=DARK_PALETTE.text, font=FONT_SCHEME.get_normal()).pack(anchor=tk.W)
+        ttk.Combobox(main_frame, textvariable=self.type_var, values=MAINTENANCE_TYPES, state="readonly").pack(fill=tk.X, pady=(0, PADDING_MEDIUM))
+        
+        tk.Label(main_frame, text="Last Service Date (YYYY-MM-DD):", bg=DARK_PALETTE.background, fg=DARK_PALETTE.text, font=FONT_SCHEME.get_normal()).pack(anchor=tk.W)
+        tk.Entry(main_frame, textvariable=self.last_date_var).pack(fill=tk.X, pady=(0, PADDING_MEDIUM))
+        
+        tk.Label(main_frame, text="Next Service Date (YYYY-MM-DD):", bg=DARK_PALETTE.background, fg=DARK_PALETTE.text, font=FONT_SCHEME.get_normal()).pack(anchor=tk.W)
+        tk.Entry(main_frame, textvariable=self.next_date_var).pack(fill=tk.X, pady=(0, PADDING_MEDIUM))
+        
+        tk.Label(main_frame, text="Cost ($):", bg=DARK_PALETTE.background, fg=DARK_PALETTE.text, font=FONT_SCHEME.get_normal()).pack(anchor=tk.W)
+        tk.Entry(main_frame, textvariable=self.cost_var).pack(fill=tk.X, pady=(0, PADDING_MEDIUM))
+        
+        tk.Label(main_frame, text="Notes:", bg=DARK_PALETTE.background, fg=DARK_PALETTE.text, font=FONT_SCHEME.get_normal()).pack(anchor=tk.W)
+        self.notes_text = tk.Text(main_frame, height=4, width=30, font=FONT_SCHEME.get_normal())
+        self.notes_text.pack(fill=tk.X, pady=(0, PADDING_MEDIUM))
+        if task and task.notes:
+            self.notes_text.insert("1.0", task.notes)
+            
+        btn_frame = tk.Frame(main_frame, bg=DARK_PALETTE.background)
+        btn_frame.pack(fill=tk.X, pady=PADDING_MEDIUM)
+        
+        tk.Button(btn_frame, text="Save", bg=DARK_PALETTE.accent, fg=DARK_PALETTE.text, command=self._save, relief=tk.FLAT, padx=PADDING_MEDIUM, pady=PADDING_SMALL).pack(side=tk.RIGHT, padx=(PADDING_SMALL, 0))
+        tk.Button(btn_frame, text="Cancel", bg=DARK_PALETTE.card, fg=DARK_PALETTE.text, command=self.destroy, relief=tk.FLAT, padx=PADDING_MEDIUM, pady=PADDING_SMALL).pack(side=tk.RIGHT)
+        
+    def _save(self) -> None:
+        try:
+            from uuid import uuid4
+            from utils import parse_date
+            
+            task_id = self.task.task_id if self.task else str(uuid4())
+            last_d = parse_date(self.last_date_var.get())
+            next_d = parse_date(self.next_date_var.get())
+            
+            new_task = MaintenanceTask(
+                task_id=task_id,
+                component=self.component_var.get(),
+                maintenance_type=self.type_var.get(),
+                last_service_date=last_d,
+                next_service_date=next_d,
+                cost=float(self.cost_var.get()),
+                notes=self.notes_text.get("1.0", tk.END).strip()
+            )
+            
+            if self.task:
+                self.manager.update_task(task_id, component=new_task.component, maintenance_type=new_task.maintenance_type,
+                                         last_service_date=new_task.last_service_date, next_service_date=new_task.next_service_date,
+                                         cost=new_task.cost, notes=new_task.notes)
+            else:
+                self.manager.add_task(new_task)
+                
+            if self.on_save:
+                self.on_save()
+            self.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+
 class ProtectionCenterView(tk.Frame):
     """Protection Center view for viewing and managing tasks."""
 
@@ -309,6 +393,34 @@ class ProtectionCenterView(tk.Frame):
             command=self._on_add_task,
         )
         add_btn.pack(side=tk.LEFT, padx=PADDING_SMALL)
+        
+        update_btn = tk.Button(
+            control_frame,
+            text="Update Task",
+            fg=DARK_PALETTE.text,
+            bg=DARK_PALETTE.accent,
+            activebackground=DARK_PALETTE.accent,
+            font=FONT_SCHEME.get_normal(),
+            relief=tk.FLAT,
+            padx=PADDING_MEDIUM,
+            pady=PADDING_SMALL,
+            command=self._on_update_task,
+        )
+        update_btn.pack(side=tk.LEFT, padx=PADDING_SMALL)
+        
+        delete_btn = tk.Button(
+            control_frame,
+            text="Delete Task",
+            fg=DARK_PALETTE.text,
+            bg=DARK_PALETTE.danger,
+            activebackground=DARK_PALETTE.danger,
+            font=FONT_SCHEME.get_normal(),
+            relief=tk.FLAT,
+            padx=PADDING_MEDIUM,
+            pady=PADDING_SMALL,
+            command=self._on_delete_task,
+        )
+        delete_btn.pack(side=tk.LEFT, padx=PADDING_SMALL)
 
         refresh_btn = tk.Button(
             control_frame,
@@ -379,6 +491,7 @@ class ProtectionCenterView(tk.Frame):
             self.tree.insert(
                 "",
                 tk.END,
+                iid=task.task_id,
                 values=(
                     task.task_id[:8],
                     task.component,
@@ -399,6 +512,7 @@ class ProtectionCenterView(tk.Frame):
             self.tree.insert(
                 "",
                 tk.END,
+                iid=task.task_id,
                 values=(
                     task.task_id[:8],
                     task.component,
@@ -410,7 +524,34 @@ class ProtectionCenterView(tk.Frame):
             )
 
     def _on_add_task(self) -> None:
-        messagebox.showinfo("Add Task", "Add task form will open here.")
+        TaskFormDialog(self.winfo_toplevel(), self.manager, on_save=self._refresh_table)
+
+    def _on_update_task(self) -> None:
+        selected = self.tree.selection()
+        if not selected:
+            messagebox.showwarning("No Selection", "Please select a task to update.")
+            return
+        
+        task_id = selected[0]
+        try:
+            task = self.manager._get_task(task_id)
+            TaskFormDialog(self.winfo_toplevel(), self.manager, task=task, on_save=self._refresh_table)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    def _on_delete_task(self) -> None:
+        selected = self.tree.selection()
+        if not selected:
+            messagebox.showwarning("No Selection", "Please select a task to delete.")
+            return
+        
+        task_id = selected[0]
+        if messagebox.askyesno("Confirm", "Are you sure you want to delete this task?"):
+            try:
+                self.manager.delete_task(task_id)
+                self._refresh_table()
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
 
 
 class HistoryView(tk.Frame):
@@ -769,6 +910,13 @@ class App(tk.Tk):
         self.geometry("1100x700")
         self.configure(bg=self.palette.background)
         self.minsize(900, 600)
+
+        try:
+            from utils import resource_path
+            logo_path = resource_path(os.path.join("media", "Your Silent Protector(logo VIGIL).png"))
+            self.iconphoto(False, tk.PhotoImage(file=logo_path))
+        except Exception as e:
+            print(f"Error loading window icon: {e}")
 
         main_frame = tk.Frame(self, bg=DARK_PALETTE.background)
         main_frame.pack(fill=tk.BOTH, expand=True)

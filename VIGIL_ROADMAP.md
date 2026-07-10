@@ -127,8 +127,8 @@ VIGIL/
 * [x] Add Protection Task
 * [x] View Protection Tasks
 * [x] Search Task
-* [ ] Update Task
-* [ ] Delete Task
+* [x] Update Task
+* [x] Delete Task
 * [x] Filter Tasks
 
 ---
