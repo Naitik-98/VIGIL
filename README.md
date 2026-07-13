@@ -43,7 +43,7 @@ VIGIL is a **local-first desktop application** built with Python and Tkinter tha
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Requirements
 
@@ -132,11 +132,6 @@ Each maintenance task stores:
 | `status` | `str` | Healthy / Due Soon / Overdue |
 | `notes` | `str` | Optional extra details |
 
-**Status Logic:**
-- 🟢 **Healthy** — Due date is more than `reminder_days` away
-- 🟠 **Due Soon** — Due within `reminder_days` (default: 7 days)
-- 🔴 **Overdue** — Due date has already passed
-
 ---
 
 ##  Storage
@@ -169,18 +164,6 @@ All data is saved to `data/maintenance.json` locally:
 - **Change reminder window:** Settings → Reminder Days slider
 - **Backup your data:** Copy `data/maintenance.json` to a safe location
 
----
-
-## 🛠️ Troubleshooting
-
-| Problem | Solution |
-|---|---|
-| `ModuleNotFoundError: psutil` | Run `pip install psutil` |
-| `ModuleNotFoundError: numpy` | Run `pip install numpy` |
-| GUI doesn't open | Run `python -m tkinter` to verify Tkinter works |
-| Stats show static values | Ensure `psutil` is installed and restart the app |
-| Data not saving | Check that `data/` folder is writable |
-| `command not found` error in editor | Run `python main.py` directly in the terminal |
 
 ---
 
@@ -195,11 +178,5 @@ See **[VIGIL_ROADMAP.md](VIGIL_ROADMAP.md)** for the full development checklist 
 MIT License — see [LICENSE](LICENSE) for details.
 
 ---
-
-<div align="center">
-
-**VIGIL** — Built with ❤️ as a professional-grade desktop application.
-
-*Clean architecture · Comprehensive validation · User-centric design*
 
 </div>
