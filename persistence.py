@@ -5,6 +5,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
+from database import (
+    get_tasks,
+    get_history,
+    replace_all_tasks,
+    replace_all_history,
+)
+
 DEFAULT_STORAGE_NAME: str = "maintenance.json"
 
 
@@ -30,35 +38,44 @@ class JSONStorage:
 
     def load_payload(self) -> dict[str, Any]:
         self.ensure_file()
+
+    
         try:
             with self.file_path.open("r", encoding="utf-8") as handle:
                 payload = json.load(handle)
-        except FileNotFoundError:
-            payload = self.default_payload()
-        except json.JSONDecodeError:
-            self._backup_corrupted_file()
-            payload = self.default_payload()
-            self._write_payload(payload)
-            return payload
-        except TypeError:
+        except (FileNotFoundError, json.JSONDecodeError, TypeError):
             payload = self.default_payload()
 
         if not isinstance(payload, dict):
-            return self.default_payload()
+            payload = self.default_payload()
 
-        merged = self.default_payload()
-        merged.update(payload)
-        if not isinstance(merged.get("tasks"), list):
-            merged["tasks"] = []
-        if not isinstance(merged.get("history"), list):
-            merged["history"] = []
-        if not isinstance(merged.get("settings"), dict):
-            merged["settings"] = self.default_payload()["settings"]
-        return merged
+        settings = payload.get("settings", self.default_payload()["settings"])
+
+        if not isinstance(settings, dict):
+            settings = self.default_payload()["settings"]
+
+        return {
+            "tasks": get_tasks(),
+            "history": get_history(),
+            "settings": settings,
+        }
+      
 
     def save_payload(self, payload: dict[str, Any]) -> None:
         self.ensure_file()
-        self._write_payload(payload)
+        
+
+        replace_all_tasks(payload.get("tasks", []))
+        replace_all_history(payload.get("history", []))
+
+        settings_payload = {
+            "settings": payload.get(
+                "settings",
+                self.default_payload()["settings"],
+            )
+        }
+
+        self._write_payload(settings_payload)
 
     def load_tasks(self) -> list[dict[str, Any]]:
         return list(self.load_payload().get("tasks", []))
@@ -85,7 +102,12 @@ class JSONStorage:
         self.save_payload(payload)
 
     def reset(self) -> None:
-        self._write_payload(self.default_payload())
+        replace_all_tasks([])
+        replace_all_history([])
+
+        self._write_payload({
+            "settings": self.default_payload()["settings"]
+        })
 
     def _write_payload(self, payload: dict[str, Any]) -> None:
         self.file_path.parent.mkdir(parents=True, exist_ok=True)

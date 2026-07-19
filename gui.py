@@ -961,8 +961,16 @@ class App(tk.Tk):
             view.pack_forget()
 
         if view_key in self.views:
-            self.views[view_key].pack(fill=tk.BOTH, expand=True)
 
+            view = self.views[view_key]
+
+            if view_key == "history":
+                view._load_history()
+
+            elif view_key == "protection":
+                view._refresh_table()
+
+            view.pack(fill=tk.BOTH, expand=True)
 
     def toggle_theme(self) -> None:
         if getattr(self, '_animating', False):
