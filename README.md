@@ -43,81 +43,109 @@ VIGIL is a **local-first desktop application** built with Python and Tkinter tha
 
 ---
 
-##  Quick Start
+## 🚀 Quick Start
 
 ### 1. Requirements
 
 - Python **3.10+**
+- MySQL **8.0+**
 - `tkinter` *(comes built-in with Python)*
 
-### 2. Install Dependencies
+---
 
-```bash
-pip install psutil numpy
+### 2. Create the Database
+
+Open **MySQL Workbench**, **XAMPP (phpMyAdmin)**, or any MySQL client and create a database named:
+
+```sql
+CREATE DATABASE vigil_db;
 ```
 
-> **Note:** VIGIL still runs without these — it just uses fallback values. Install both for full live stats and analytics.
+Then import the provided SQL file:
 
-### 3. Run the App
+```text
+vigil_db.sql
+```
+
+Or using the MySQL command line:
+
+```bash
+mysql -u root -p vigil_db < vigil_db.sql
+```
+
+> **Note:** Make sure the database name is **`vigil_db`** before importing the SQL file.
+
+---
+
+### 3. Install Dependencies
+
+```bash
+pip install psutil numpy mysql-connector-python
+```
+
+> **Note:** `mysql-connector-python` is required for MySQL connectivity, while `psutil` and `numpy` are recommended for live system statistics and analytics.
+
+---
+
+### 4. Run the Application
 
 ```bash
 python main.py
 ```
 
----
+## Project Structure
 
-##  Project Structure
-
-```
+```text
 VIGIL/
-├── main.py            # Entry point
-├── gui.py             # All UI views and components
-├── theme.py           # Color palettes and font scheme
-├── dashboard.py       # Live system metrics (psutil)
-├── analytics.py       # NumPy statistics engine
-├── manager.py         # Core business logic (ProtectionManager)
-├── domain.py          # MaintenanceTask data model
-├── persistence.py     # JSON file storage
-├── validator.py       # Input validation rules
-├── utils.py           # Shared utilities
+├── main.py                 # Application entry point
+├── gui.py                  # User interface and views
+├── theme.py                # UI themes, colors, and fonts
+├── dashboard.py            # Live system metrics (psutil)
+├── analytics.py            # NumPy analytics engine
+├── manager.py              # Core business logic
+├── domain.py               # Maintenance task data model
+├── persistence.py          # Hybrid persistence (JSON + MySQL)
+├── database.py             # MySQL database operations
+├── validator.py            # Input validation
+├── utils.py                # Shared utility functions
+├── vigil_db.sql            # MySQL database schema
 ├── data/
-│   └── maintenance.json   # Auto-created local data store
+│   └── maintenance.json    # Application settings
 ├── media/
-│   └── *.png              # Logo and assets
-└── VIGIL_ROADMAP.md       # Development roadmap & checklist
+│   └── *.png               # Logos and application assets
+└── VIGIL_ROADMAP.md        # Development roadmap
 ```
 
----
-
-##  Architecture
+## Architecture
 
 VIGIL follows a clean **layered architecture**:
 
-```
-┌─────────────────────────────────┐
-│   Presentation Layer            │
-│   gui.py · theme.py             │
-├─────────────────────────────────┤
-│   Domain Layer                  │
-│   manager.py · domain.py        │
-├─────────────────────────────────┤
-│   Infrastructure Layer          │
-│   persistence.py · dashboard.py │
-│   analytics.py                  │
-├─────────────────────────────────┤
-│   Cross-Cutting                 │
-│   validator.py · utils.py       │
-└─────────────────────────────────┘
+```text
+┌─────────────────────────────────────┐
+│   Presentation Layer                │
+│   gui.py · theme.py                 │
+├─────────────────────────────────────┤
+│   Domain Layer                      │
+│   manager.py · domain.py            │
+├─────────────────────────────────────┤
+│   Infrastructure Layer              │
+│   persistence.py · database.py      │
+│   dashboard.py · analytics.py       │
+├─────────────────────────────────────┤
+│   Cross-Cutting                     │
+│   validator.py · utils.py           │
+└─────────────────────────────────────┘
 ```
 
 **Data Flow:**
-```
-User Input → Validator → Manager → Persistence → Analytics → UI
+
+```text
+User Input → Validator → Manager → Persistence → MySQL / JSON → Analytics → UI
 ```
 
 ---
 
-##  Data Model
+## Data Model
 
 Each maintenance task stores:
 
@@ -134,38 +162,31 @@ Each maintenance task stores:
 
 ---
 
-##  Storage
+## Storage
 
-All data is saved to `data/maintenance.json` locally:
+VIGIL uses a **hybrid storage architecture**:
 
-```json
-{
-  "tasks": [...],
-  "history": [...],
-  "settings": {
-    "dark_mode": true,
-    "reminder_days": 7,
-    "autosave": true
-  }
-}
-```
+- **MySQL** stores:
+  - Maintenance Tasks
+  - Maintenance History
 
-- **Auto-created** if missing
-- **Backup & recovery** if corrupted (saved as `.corrupted-TIMESTAMP`)
-- **No cloud sync** — your data stays on your machine
+- **JSON (`data/maintenance.json`)** stores:
+  - Application Settings
+  - Theme Preferences
+  - Reminder Configuration
+  - Autosave Settings
+
+This approach combines the reliability of a relational database with lightweight local configuration storage.
 
 ---
 
-## 🔧 Usage Tips
+## Usage Tips
 
 - **Add a task:** Protection Center → `+ Add Task`
 - **Mark complete:** Select task → `Mark Done` (updates last service date)
 - **Toggle theme:** Click ☀️/🌙 button in the top-right corner
 - **Change reminder window:** Settings → Reminder Days slider
-- **Backup your data:** Copy `data/maintenance.json` to a safe location
-
-
----
+- **Before first launch:** Create the `vigil_db` database and import `vigil_db.sql`
 
 ##  Roadmap
 
